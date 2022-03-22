@@ -1,7 +1,7 @@
 # EBS_Homework
 
 # Members
-Marian-Sergiu Nistor
+Marian-Sergiu Nistor \
 Stefan Popa
 
 # How to run
