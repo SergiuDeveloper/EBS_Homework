@@ -109,25 +109,34 @@ def generate_dates_between(start_date, end_date):
 
 if __name__ == '__main__':
     publications = list(generate_publications(
-        10,
-        ['Google', 'Microsoft', 'Facebook', 'Twitter', 'Amazon'],
-        list(generate_dates_between(date(2010, 1, 15), date(2022, 1, 15))),
+        100,
+        ['Google', 'Microsoft', 'Facebook', 'Twitter', 'Amazon', 'Uber', 'Glovo'],
+        list(generate_dates_between(date(2010, 4, 12), date(2018, 1, 1))),
         -30., 30.,
         -10., 10.,
-        0., 1.
+        0.1, 0.8
     ))
 
     subscriptions = list(generate_subscriptions(
         50,
-        {},
-        {},
+        {
+            'Company': 0.9,
+            'Value': 0.3,
+            'Variation': 0.8
+        },
+        {
+            'Company': 0.9,
+            'Value': 0.7
+        },
         ['>', '<', '=', '>=', '<=', '!='],
-        ['Google', 'Microsoft', 'Facebook', 'Twitter', 'Amazon'],
-        list(generate_dates_between(date(2010, 1, 15), date(2022, 1, 15))),
-        -30., 30.,
-        -10., 10.,
-        0., 1.
+        ['Google', 'Microsoft', 'Facebook', 'Twitter', 'Amazon', 'SpaceX', 'Tesla'],
+        list(generate_dates_between(date(2015, 6, 22), date(2022, 8, 27))),
+        -50., 15.5,
+        -40., 3.,
+        0.55, 0.67
     ))
     
-    print(publications)
-    print(subscriptions)
+    with open('output.txt', 'w') as output_file:
+        print(f'Publications: {publications}', file=output_file)
+        print(file=output_file)
+        print(f'Subscriptions: {subscriptions}', file=output_file)
