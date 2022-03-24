@@ -31,6 +31,8 @@ def generate_subscriptions(subscriptions_count, fields_frequency, field_equals_f
         fields_frequency[field] = min(1., fields_frequency[field])
         fields_frequency[field] = int(math.ceil(subscriptions_count * fields_frequency[field]))
 
+    remaining_fields = ['Company', 'Date', 'Value', 'Drop', 'Variation']
+
     # Generate subscriptions in order to satisfy constraints
     while subscriptions_count > 0:
         subscription = []
@@ -61,12 +63,15 @@ def generate_subscriptions(subscriptions_count, fields_frequency, field_equals_f
 
         if len(subscription) == 0:
             break
+
+        if field in remaining_fields:
+            remaining_fields.remove(field)
         
         yield tuple(subscription)
 
         subscriptions_count -= 1
 
-    fields = ['Company', 'Date', 'Value', 'Drop', 'Variation']
+    fields = remaining_fields
 
     # Generate the other required subscriptions
     for _ in range(subscriptions_count):
