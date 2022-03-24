@@ -72,6 +72,8 @@ def generate_subscriptions(subscriptions_count, fields_frequency, field_equals_f
         subscriptions_count -= 1
 
     fields = remaining_fields
+    if len(remaining_fields) == 0:
+        return
 
     # Generate the other required subscriptions
     for _ in range(subscriptions_count):
