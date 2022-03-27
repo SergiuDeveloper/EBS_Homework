@@ -24,12 +24,11 @@ def generate_publications(publications_count, companies, dates, value_min, value
 def generate_subscriptions(subscriptions_count, fields_frequency, field_equals_frequency, operators, companies, dates, value_min, value_max, drop_min, drop_max, variation_min, variation_max):
     # Convert from percentages to values
     for field in fields_frequency.keys():
+        fields_frequency[field] = min(1., fields_frequency[field])
+        fields_frequency[field] = int(math.floor(subscriptions_count * fields_frequency[field]))
         if field in field_equals_frequency.keys():
             field_equals_frequency[field] = min(1., field_equals_frequency[field])
-            fields_frequency[field] = max(fields_frequency[field], field_equals_frequency[field])
-            field_equals_frequency[field] = int(math.ceil(subscriptions_count * field_equals_frequency[field]))
-        fields_frequency[field] = min(1., fields_frequency[field])
-        fields_frequency[field] = int(math.ceil(subscriptions_count * fields_frequency[field]))
+            field_equals_frequency[field] = int(math.floor(fields_frequency[field] * field_equals_frequency[field]))
 
     remaining_fields = ['Company', 'Date', 'Value', 'Drop', 'Variation']
 
@@ -60,12 +59,11 @@ def generate_subscriptions(subscriptions_count, fields_frequency, field_equals_f
                     operator = random.choice(operators)
                     subscription.append((field, operator, value))
                 fields_frequency[field] -= 1
+                if fields_frequency[field] == 0:
+                    remaining_fields.remove(field)
 
         if len(subscription) == 0:
             break
-
-        if field in remaining_fields:
-            remaining_fields.remove(field)
         
         yield tuple(subscription)
 
@@ -78,7 +76,7 @@ def generate_subscriptions(subscriptions_count, fields_frequency, field_equals_f
     # Generate the other required subscriptions
     for _ in range(subscriptions_count):
         sampled_fields = []
-        for __ in range(random.randrange(1, len(fields))):
+        for __ in range(random.randrange(1, len(fields) + 1)):
             sampled_field = random.choice(fields)
             sampled_fields.append(sampled_field)
         sampled_fields = set(sampled_fields)
@@ -125,11 +123,11 @@ if __name__ == '__main__':
     ))
 
     subscriptions = list(generate_subscriptions(
-        50,
+        10,
         {
-            'Company': 0.9,
+            'Company': 0.7,
             'Value': 0.3,
-            'Variation': 0.8
+            'Variation': 0.2
         },
         {
             'Company': 0.9,
