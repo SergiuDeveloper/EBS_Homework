@@ -4,7 +4,8 @@ import math
 from datetime import date, timedelta
 
 
-def generate_publications(publications_count, companies, dates, value_min, value_max, drop_min, drop_max, variation_min, variation_max):
+def generate_publications(publications_count, companies, dates, value_min, value_max, drop_min, drop_max, variation_min,
+                          variation_max):
     for _ in range(publications_count):
         company = random.choice(companies)
         date = random.choice(dates)
@@ -21,22 +22,26 @@ def generate_publications(publications_count, companies, dates, value_min, value
         )
         yield publication
 
-def generate_subscriptions(subscriptions_count, fields_frequency, field_equals_frequency, operators, companies, dates, value_min, value_max, drop_min, drop_max, variation_min, variation_max):
+
+def generate_subscriptions(subscriptions_count, fields_frequency, field_equals_frequency, operators, companies, dates,
+                           value_min, value_max, drop_min, drop_max, variation_min, variation_max):
+    max_subscriptions = subscriptions_count
     # Convert from percentages to values
     for field in fields_frequency.keys():
+        fields_frequency[field] = min(1., fields_frequency[field])
+        fields_frequency[field] = int(math.floor(subscriptions_count * fields_frequency[field]))
         if field in field_equals_frequency.keys():
             field_equals_frequency[field] = min(1., field_equals_frequency[field])
-            fields_frequency[field] = max(fields_frequency[field], field_equals_frequency[field])
-            field_equals_frequency[field] = int(math.ceil(subscriptions_count * field_equals_frequency[field]))
-        fields_frequency[field] = min(1., fields_frequency[field])
-        fields_frequency[field] = int(math.ceil(subscriptions_count * fields_frequency[field]))
+            field_equals_frequency[field] = int(math.floor(fields_frequency[field] * field_equals_frequency[field]))
 
     remaining_fields = ['Company', 'Date', 'Value', 'Drop', 'Variation']
 
     # Generate subscriptions in order to satisfy constraints
+    generated_subscriptions = []
+    index_sub = 0
     while subscriptions_count > 0:
         subscription = []
-
+        finished_adding = True
         for field in fields_frequency.keys():
             value = None
             if field == 'Company':
@@ -53,57 +58,45 @@ def generate_subscriptions(subscriptions_count, fields_frequency, field_equals_f
                 continue
 
             if fields_frequency[field] > 0:
+                finished_adding = False
                 if field in field_equals_frequency.keys() and field_equals_frequency[field] > 0:
-                    subscription.append((field, '=', value))
+                    tmp_field = (field, '=', value)
                     field_equals_frequency[field] -= 1
                 else:
                     operator = random.choice(operators)
-                    subscription.append((field, operator, value))
+                    tmp_field = (field, operator, value)
+
+                # Insert new fields until we reach max subscription number then append to existing ones
+                # checking if fields aren't already present in that subscription
+                next_free_index = index_sub
+                if len(generated_subscriptions) < max_subscriptions:
+                    generated_subscriptions.insert(index_sub, [tmp_field])
+                else:
+                    collision = True
+                    while collision:
+                        if any(field in i for i in generated_subscriptions[next_free_index]):
+                            next_free_index += 1
+                        else:
+                            generated_subscriptions[next_free_index].append(tmp_field)
+                            collision = False
+                # don't skip the subscriptions that got collision
+                if next_free_index == index_sub:
+                    index_sub += 1
+                    index_sub %= max_subscriptions
                 fields_frequency[field] -= 1
+                if fields_frequency[field] == 0:
+                    remaining_fields.remove(field)
 
-        if len(subscription) == 0:
+        if finished_adding:
             break
-
-        if field in remaining_fields:
-            remaining_fields.remove(field)
-        
-        yield tuple(subscription)
 
         subscriptions_count -= 1
 
     fields = remaining_fields
     if len(remaining_fields) == 0:
-        return
-
-    # Generate the other required subscriptions
-    for _ in range(subscriptions_count):
-        sampled_fields = []
-        for __ in range(random.randrange(1, len(fields))):
-            sampled_field = random.choice(fields)
-            sampled_fields.append(sampled_field)
-        sampled_fields = set(sampled_fields)
-
-        subscription = []
-        
-        for field in sampled_fields:
-            value = None
-            if field == 'Company':
-                value = random.choice(companies)
-            elif field == 'Date':
-                value = random.choice(dates)
-            elif field == 'Value':
-                value = random.uniform(value_min, value_max)
-            elif field == 'Drop':
-                value = random.uniform(drop_min, drop_max)
-            elif field == 'Variation':
-                value = random.uniform(variation_min, variation_max)
-            if value is None:
-                raise Exception('Logic exception')
-
-            operator = random.choice(operators)
-            subscription.append((field, operator, value))
-
-        yield tuple(subscription)
+        return generated_subscriptions
+    else:
+        raise Exception('Logic exception')
 
 
 def generate_dates_between(start_date, end_date):
@@ -125,11 +118,13 @@ if __name__ == '__main__':
     ))
 
     subscriptions = list(generate_subscriptions(
-        50,
+        100,
         {
             'Company': 0.9,
-            'Value': 0.3,
-            'Variation': 0.8
+            'Value': 0.2,
+            'Variation': 0.2,
+            'Drop': 0.2,
+            'Date': 0.2
         },
         {
             'Company': 0.9,
@@ -142,7 +137,7 @@ if __name__ == '__main__':
         -40., 3.,
         0.55, 0.67
     ))
-    
+
     with open('output.txt', 'w') as output_file:
         print(f'Publications: {publications}', file=output_file)
         print(file=output_file)
