@@ -92,11 +92,7 @@ def generate_subscriptions(subscriptions_count, fields_frequency, field_equals_f
 
         subscriptions_count -= 1
 
-    fields = remaining_fields
-    if len(remaining_fields) == 0:
-        return generated_subscriptions
-    else:
-        raise Exception('Logic exception')
+    return generated_subscriptions
 
 
 def generate_dates_between(start_date, end_date):
@@ -108,6 +104,7 @@ def generate_dates_between(start_date, end_date):
 
 
 if __name__ == '__main__':
+
     publications = list(generate_publications(
         100,
         ['Google', 'Microsoft', 'Facebook', 'Twitter', 'Amazon', 'Uber', 'Glovo'],
@@ -118,9 +115,9 @@ if __name__ == '__main__':
     ))
 
     subscriptions = list(generate_subscriptions(
-        100,
+        10,
         {
-            'Company': 0.9,
+            'Company': 0.2,
             'Value': 0.2,
             'Variation': 0.2,
             'Drop': 0.2,
@@ -128,7 +125,10 @@ if __name__ == '__main__':
         },
         {
             'Company': 0.9,
-            'Value': 0.7
+            'Value': 0.7,
+            'Variation': 0.2,
+            'Drop': 0.2,
+            'Date': 0.2
         },
         ['>', '<', '=', '>=', '<=', '!='],
         ['Google', 'Microsoft', 'Facebook', 'Twitter', 'Amazon', 'SpaceX', 'Tesla'],
@@ -137,6 +137,50 @@ if __name__ == '__main__':
         -40., 3.,
         0.55, 0.67
     ))
+
+    generated_pubs_fields_freq = {
+        'Company': 0,
+        'Value': 0,
+        'Variation': 0,
+        'Drop': 0,
+        'Date': 0
+    }
+
+    generated_subs_fields_freq = {
+        'Company': 0,
+        'Value': 0,
+        'Variation': 0,
+        'Drop': 0,
+        'Date': 0
+    }
+
+    generated_subs_equals_freq = {
+        'Company': 0,
+        'Value': 0,
+        'Variation': 0,
+        'Drop': 0,
+        'Date': 0
+    }
+
+    for tmp_publication in publications:
+        for tmp_field in tmp_publication:
+            field = tmp_field[0]
+            generated_pubs_fields_freq[field] += 1
+
+    for tmp_subscription in subscriptions:
+        for tmp_field in tmp_subscription:
+            field = tmp_field[0]
+            operator = tmp_field[1]
+            if operator == '=':
+                generated_subs_equals_freq[field] += 1
+            generated_subs_fields_freq[field] += 1
+
+    print("==================GENERATED PUBS STATS==================")
+    print(generated_pubs_fields_freq)
+    print("==================GENERATED SUBS FIELDS FREQUENCY STATS==================")
+    print(generated_subs_fields_freq)
+    print("==================GENERATED SUBS EQUAL OPERATOR STATS==================")
+    print(generated_subs_equals_freq)
 
     with open('output.txt', 'w') as output_file:
         print(f'Publications: {publications}', file=output_file)
